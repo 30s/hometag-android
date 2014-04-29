@@ -1,15 +1,19 @@
 package com.ax003d.hometag;
 
 import android.app.Activity;
-import android.app.ActionBar;
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.os.Build;
+import android.widget.Button;
+
+import com.ax003d.hometag.services.AcquisitionService;
+import com.ax003d.hometag.utils.Utils;
 
 public class MainActivity extends Activity {
 
@@ -52,11 +56,36 @@ public class MainActivity extends Activity {
 		public PlaceholderFragment() {
 		}
 
+		private OnClickListener onClickListener = new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				if (v.getId() == R.id.btn_control_service) {
+					Intent intent = new Intent(getActivity(),
+							AcquisitionService.class);
+					if (Utils.isServiceRunning(getActivity(),
+							AcquisitionService.class.getName())) {
+						getActivity().stopService(intent);
+						btn_control_service.setText("Start");
+					} else {
+						getActivity().startService(intent);
+						btn_control_service.setText("Stop");
+					}
+				}
+			}
+		};
+		private Button btn_control_service;
+
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
+
+			btn_control_service = (Button) rootView
+					.findViewById(R.id.btn_control_service);
+			btn_control_service.setOnClickListener(onClickListener);
+
 			return rootView;
 		}
 	}
