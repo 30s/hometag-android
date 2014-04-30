@@ -75,7 +75,7 @@ public class MainActivity extends Activity {
 			}
 		};
 		private Button btn_control_service;
-
+		
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				Bundle savedInstanceState) {
@@ -85,7 +85,13 @@ public class MainActivity extends Activity {
 			btn_control_service = (Button) rootView
 					.findViewById(R.id.btn_control_service);
 			btn_control_service.setOnClickListener(onClickListener);
-
+			if (Utils.isServiceRunning(getActivity(),
+					AcquisitionService.class.getName())) {
+				btn_control_service.setText("Start");
+			} else {
+				btn_control_service.setText("Stop");
+			}
+			
 			return rootView;
 		}
 	}
