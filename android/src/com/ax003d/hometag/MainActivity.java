@@ -87,9 +87,9 @@ public class MainActivity extends Activity {
 			btn_control_service.setOnClickListener(onClickListener);
 			if (Utils.isServiceRunning(getActivity(),
 					AcquisitionService.class.getName())) {
-				btn_control_service.setText("Start");
-			} else {
 				btn_control_service.setText("Stop");
+			} else {
+				btn_control_service.setText("Start");
 			}
 			
 			return rootView;
