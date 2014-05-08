@@ -11,10 +11,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ListView;
 
 import com.ax003d.hometag.adapters.DeviceAdapter;
+import com.ax003d.hometag.events.Acquisition;
+import com.ax003d.hometag.events.DataRead;
 import com.ax003d.hometag.events.DeviceFound;
 import com.ax003d.hometag.events.Scan;
 import com.ax003d.hometag.models.Device;
@@ -86,6 +90,18 @@ public class MainActivity extends Activity {
 				}
 			}
 		};
+		
+		private OnItemClickListener onItemClickListener = new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Device dev = (Device) adapter.getItem(position);
+				Utils.getBus().post(new Acquisition(dev.getMac()));
+			}
+			
+		};
+		
 		private Button btn_control_service;
 		private ListView lst_dev;
 		private DeviceAdapter adapter;
@@ -111,6 +127,7 @@ public class MainActivity extends Activity {
 			lst_dev = (ListView) rootView.findViewById(R.id.lst_dev);
 			adapter = new DeviceAdapter();
 			lst_dev.setAdapter(adapter);
+			lst_dev.setOnItemClickListener(onItemClickListener);
 			
 			return rootView;
 		}
@@ -132,6 +149,11 @@ public class MainActivity extends Activity {
 			Log.d("AcquisitionService", event.mac);
 			Device device = new Device(event.mac);
 			adapter.addDevice(device);
+		}
+		
+		@Subscribe
+		public void onDataRead(DataRead event) {
+			adapter.setDeviceVal(event.mac, event.val, event.ts);
 		}
 	}
 

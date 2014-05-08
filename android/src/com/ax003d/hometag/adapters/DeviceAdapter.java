@@ -62,4 +62,16 @@ public class DeviceAdapter extends BaseAdapter {
 		notifyDataSetChanged();
 	}
 
+	public void setDeviceVal(String mac, String val, String ts) {
+		for (Device d : mDevices) {
+			if (d.getMac().equals(mac)) {
+				d.setVal(val);
+				d.setTs(ts);
+				notifyDataSetChanged();
+				break;
+			}
+		}
+
+	}
+
 }

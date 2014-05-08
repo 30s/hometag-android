@@ -1,5 +1,7 @@
 package com.ax003d.hometag.services;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import android.app.Service;
@@ -14,6 +16,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.ax003d.hometag.events.Acquisition;
+import com.ax003d.hometag.events.DataRead;
 import com.ax003d.hometag.events.DeviceFound;
 import com.ax003d.hometag.events.Scan;
 import com.ax003d.hometag.utils.Utils;
@@ -29,6 +33,8 @@ public class AcquisitionService extends Service {
 	protected BleService mService;
 	private IBle mBle;
 
+	private Set<String> mDevices = new HashSet<String>();
+
 	private static final UUID TH_SERVICE = UUID
 			.fromString("0000AA20-0000-1000-8000-00805F9B34FB");
 	private static final UUID TH_CHARACTERISTIC = UUID
@@ -40,15 +46,24 @@ public class AcquisitionService extends Service {
 		public void onReceive(Context context, Intent intent) {
 			Bundle extras = intent.getExtras();
 			String action = intent.getAction();
-//			if (!DEVICE.equals(extras.getString(BleService.EXTRA_ADDR))) {
-//				return;
-//			}
+			String addr = extras.getString(BleService.EXTRA_ADDR);
 
 			if (BleService.BLE_DEVICE_FOUND.equals(action)) {
-				BluetoothDevice dev = (BluetoothDevice) extras.get(BleService.EXTRA_DEVICE);
+				BluetoothDevice dev = (BluetoothDevice) extras
+						.get(BleService.EXTRA_DEVICE);
 				Log.d(TAG, "device found " + dev.getAddress());
 				Utils.getBus().post(new DeviceFound(dev.getAddress()));
-			} else if (BleService.BLE_GATT_CONNECTED.equals(action)) {
+			}
+
+			// if (!DEVICE.equals(extras.getString(BleService.EXTRA_ADDR))) {
+			// return;
+			// }
+
+			if (!mDevices.contains(addr)) {
+				return;
+			}
+
+			if (BleService.BLE_GATT_CONNECTED.equals(action)) {
 				Log.d(TAG, "connected");
 			} else if (BleService.BLE_SERVICE_DISCOVERED.equals(action)) {
 				Log.d(TAG, "service discovered");
@@ -60,9 +75,12 @@ public class AcquisitionService extends Service {
 				mBle.requestCharacteristicNotification(DEVICE, characteristic);
 			} else if (BleService.BLE_GATT_DISCONNECTED.equals(action)) {
 				Log.d(TAG, "gatt disconnected");
+				mBle.requestConnect(addr);
 			} else if (BleService.BLE_CHARACTERISTIC_CHANGED.equals(action)) {
 				byte[] val = extras.getByteArray(BleService.EXTRA_VALUE);
-				Log.d(TAG, val[0] + "c " + val[2] + "%");
+				String data = val[0] + "c " + val[2] + "%"; 
+				Log.d(TAG, data);
+				Utils.getBus().post(new DataRead(addr, data));
 			}
 		}
 	};
@@ -75,7 +93,6 @@ public class AcquisitionService extends Service {
 			mBle = mService.getBle();
 			// TODO： send message to enable bluetooth
 			registerReceiver(mBleReceiver, BleService.getIntentFilter());
-			// mBle.requestConnect(DEVICE);
 		}
 
 		@Override
@@ -110,16 +127,16 @@ public class AcquisitionService extends Service {
 		Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
 		mBle.disconnect(DEVICE);
 	}
-	
+
 	@Subscribe
 	public void onScan(Scan event) {
 		Log.d(TAG, "onScan");
 		if (mBle == null) {
 			return;
 		}
-		
+
 		new Thread(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				mBle.startScan();
@@ -131,5 +148,20 @@ public class AcquisitionService extends Service {
 				mBle.stopScan();
 			}
 		}).start();
+	}
+
+	@Subscribe
+	public void onAcquisition(Acquisition event) {
+		if (mBle == null) {
+			return;
+		}
+
+		if (mDevices.contains(event.mac)) {
+			mBle.disconnect(event.mac);
+			mDevices.remove(event.mac);
+		} else {
+			mBle.requestConnect(event.mac);
+			mDevices.add(event.mac);
+		}
 	}
 }
