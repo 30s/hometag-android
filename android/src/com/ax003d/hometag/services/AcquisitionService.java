@@ -28,7 +28,6 @@ import com.xtremeprog.sdk.ble.BleService;
 import com.xtremeprog.sdk.ble.IBle;
 
 public class AcquisitionService extends Service {
-	private static final String DEVICE = "88:33:14:DD:8D:63";
 	private static final String TAG = "AcquisitionService";
 	protected BleService mService;
 	private IBle mBle;
@@ -55,10 +54,6 @@ public class AcquisitionService extends Service {
 				Utils.getBus().post(new DeviceFound(dev.getAddress()));
 			}
 
-			// if (!DEVICE.equals(extras.getString(BleService.EXTRA_ADDR))) {
-			// return;
-			// }
-
 			if (!mDevices.contains(addr)) {
 				return;
 			}
@@ -67,12 +62,12 @@ public class AcquisitionService extends Service {
 				Log.d(TAG, "connected");
 			} else if (BleService.BLE_SERVICE_DISCOVERED.equals(action)) {
 				Log.d(TAG, "service discovered");
-				BleGattService service = mBle.getService(DEVICE, TH_SERVICE);
+				BleGattService service = mBle.getService(addr, TH_SERVICE);
 				assert (service != null);
 				BleGattCharacteristic characteristic = service
 						.getCharacteristic(TH_CHARACTERISTIC);
 				assert (characteristic != null);
-				mBle.requestCharacteristicNotification(DEVICE, characteristic);
+				mBle.requestCharacteristicNotification(addr, characteristic);
 			} else if (BleService.BLE_GATT_DISCONNECTED.equals(action)) {
 				Log.d(TAG, "gatt disconnected");
 				mBle.requestConnect(addr);
@@ -125,7 +120,9 @@ public class AcquisitionService extends Service {
 	public void onDestroy() {
 		Utils.getBus().unregister(this);
 		Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
-		mBle.disconnect(DEVICE);
+		for (String d : mDevices) {
+			mBle.disconnect(d);
+		}
 	}
 
 	@Subscribe
