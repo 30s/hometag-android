@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,9 +15,12 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.ax003d.hometag.adapters.DeviceAdapter;
+import com.ax003d.hometag.events.DeviceFound;
 import com.ax003d.hometag.events.Scan;
+import com.ax003d.hometag.models.Device;
 import com.ax003d.hometag.services.AcquisitionService;
 import com.ax003d.hometag.utils.Utils;
+import com.squareup.otto.Subscribe;
 
 public class MainActivity extends Activity {
 
@@ -121,6 +125,13 @@ public class MainActivity extends Activity {
 		public void onPause() {
 			super.onPause();
 			Utils.getBus().unregister(this);
+		}
+		
+		@Subscribe
+		public void onDeviceFound(DeviceFound event) {
+			Log.d("AcquisitionService", event.mac);
+			Device device = new Device(event.mac);
+			adapter.addDevice(device);
 		}
 	}
 

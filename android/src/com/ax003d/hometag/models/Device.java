@@ -5,10 +5,8 @@ public class Device {
 	private String val;
 	private String ts;
 
-	public Device(String mac, String val, String ts) {
+	public Device(String mac) {
 		this.setMac(mac);
-		this.setVal(val);
-		this.setTs(ts);
 	}
 
 	public String getMac() {

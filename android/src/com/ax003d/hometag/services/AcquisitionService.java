@@ -3,6 +3,7 @@ package com.ax003d.hometag.services;
 import java.util.UUID;
 
 import android.app.Service;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,6 +14,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.ax003d.hometag.events.DeviceFound;
 import com.ax003d.hometag.events.Scan;
 import com.ax003d.hometag.utils.Utils;
 import com.squareup.otto.Subscribe;
@@ -38,11 +40,15 @@ public class AcquisitionService extends Service {
 		public void onReceive(Context context, Intent intent) {
 			Bundle extras = intent.getExtras();
 			String action = intent.getAction();
-			if (!DEVICE.equals(extras.getString(BleService.EXTRA_ADDR))) {
-				return;
-			}
+//			if (!DEVICE.equals(extras.getString(BleService.EXTRA_ADDR))) {
+//				return;
+//			}
 
-			if (BleService.BLE_GATT_CONNECTED.equals(action)) {
+			if (BleService.BLE_DEVICE_FOUND.equals(action)) {
+				BluetoothDevice dev = (BluetoothDevice) extras.get(BleService.EXTRA_DEVICE);
+				Log.d(TAG, "device found " + dev.getAddress());
+				Utils.getBus().post(new DeviceFound(dev.getAddress()));
+			} else if (BleService.BLE_GATT_CONNECTED.equals(action)) {
 				Log.d(TAG, "connected");
 			} else if (BleService.BLE_SERVICE_DISCOVERED.equals(action)) {
 				Log.d(TAG, "service discovered");
@@ -69,7 +75,7 @@ public class AcquisitionService extends Service {
 			mBle = mService.getBle();
 			// TODO： send message to enable bluetooth
 			registerReceiver(mBleReceiver, BleService.getIntentFilter());
-			mBle.requestConnect(DEVICE);
+			// mBle.requestConnect(DEVICE);
 		}
 
 		@Override
@@ -108,5 +114,22 @@ public class AcquisitionService extends Service {
 	@Subscribe
 	public void onScan(Scan event) {
 		Log.d(TAG, "onScan");
+		if (mBle == null) {
+			return;
+		}
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				mBle.startScan();
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				mBle.stopScan();
+			}
+		}).start();
 	}
 }

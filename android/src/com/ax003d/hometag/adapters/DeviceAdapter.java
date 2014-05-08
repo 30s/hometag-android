@@ -52,4 +52,14 @@ public class DeviceAdapter extends BaseAdapter {
 		return view;
 	}
 
+	public void addDevice(Device device) {
+		for (Device d : mDevices) {
+			if (d.getMac().equals(device.getMac())) {
+				return;
+			}
+		}
+		mDevices.add(device);
+		notifyDataSetChanged();
+	}
+
 }
