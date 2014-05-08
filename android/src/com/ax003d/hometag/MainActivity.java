@@ -11,7 +11,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
 
+import com.ax003d.hometag.adapters.DeviceAdapter;
 import com.ax003d.hometag.services.AcquisitionService;
 import com.ax003d.hometag.utils.Utils;
 
@@ -75,6 +77,8 @@ public class MainActivity extends Activity {
 			}
 		};
 		private Button btn_control_service;
+		private ListView lst_dev;
+		private DeviceAdapter adapter;
 		
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -91,6 +95,10 @@ public class MainActivity extends Activity {
 			} else {
 				btn_control_service.setText("Start");
 			}
+			
+			lst_dev = (ListView) rootView.findViewById(R.id.lst_dev);
+			adapter = new DeviceAdapter();
+			lst_dev.setAdapter(adapter);
 			
 			return rootView;
 		}

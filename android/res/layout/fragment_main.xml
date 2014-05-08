@@ -9,9 +9,16 @@
     tools:context="com.ax003d.hometag.MainActivity$PlaceholderFragment" >
 
     <Button
-        android:id="@+id/btn_control_service"        
+        android:id="@+id/btn_control_service"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Start" />
+
+    <ListView
+        android:id="@+id/lst_dev"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/btn_control_service" >
+    </ListView>
 
 </RelativeLayout>
