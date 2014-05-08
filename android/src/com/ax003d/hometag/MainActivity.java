@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.ax003d.hometag.adapters.DeviceAdapter;
+import com.ax003d.hometag.events.Scan;
 import com.ax003d.hometag.services.AcquisitionService;
 import com.ax003d.hometag.utils.Utils;
 
@@ -49,7 +50,7 @@ public class MainActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
+	
 	/**
 	 * A placeholder fragment containing a simple view.
 	 */
@@ -73,6 +74,11 @@ public class MainActivity extends Activity {
 						getActivity().startService(intent);
 						btn_control_service.setText("Stop");
 					}
+					return;
+				}
+				
+				if (v.getId() == R.id.btn_scan) {
+					Utils.getBus().post(new Scan());
 				}
 			}
 		};
@@ -96,11 +102,25 @@ public class MainActivity extends Activity {
 				btn_control_service.setText("Start");
 			}
 			
+			rootView.findViewById(R.id.btn_scan).setOnClickListener(onClickListener);
+			
 			lst_dev = (ListView) rootView.findViewById(R.id.lst_dev);
 			adapter = new DeviceAdapter();
 			lst_dev.setAdapter(adapter);
 			
 			return rootView;
+		}
+		
+		@Override
+		public void onResume() {
+			super.onResume();
+			Utils.getBus().register(this);
+		}
+		
+		@Override
+		public void onPause() {
+			super.onPause();
+			Utils.getBus().unregister(this);
 		}
 	}
 

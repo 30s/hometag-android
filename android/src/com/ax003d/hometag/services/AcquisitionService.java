@@ -13,6 +13,9 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.ax003d.hometag.events.Scan;
+import com.ax003d.hometag.utils.Utils;
+import com.squareup.otto.Subscribe;
 import com.xtremeprog.sdk.ble.BleGattCharacteristic;
 import com.xtremeprog.sdk.ble.BleGattService;
 import com.xtremeprog.sdk.ble.BleService;
@@ -45,7 +48,8 @@ public class AcquisitionService extends Service {
 				Log.d(TAG, "service discovered");
 				BleGattService service = mBle.getService(DEVICE, TH_SERVICE);
 				assert (service != null);
-				BleGattCharacteristic characteristic = service.getCharacteristic(TH_CHARACTERISTIC);
+				BleGattCharacteristic characteristic = service
+						.getCharacteristic(TH_CHARACTERISTIC);
 				assert (characteristic != null);
 				mBle.requestCharacteristicNotification(DEVICE, characteristic);
 			} else if (BleService.BLE_GATT_DISCONNECTED.equals(action)) {
@@ -77,6 +81,7 @@ public class AcquisitionService extends Service {
 
 	@Override
 	public void onCreate() {
+		Utils.getBus().register(this);
 		Intent bindIntent = new Intent(this, BleService.class);
 		bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 	}
@@ -95,7 +100,13 @@ public class AcquisitionService extends Service {
 
 	@Override
 	public void onDestroy() {
+		Utils.getBus().unregister(this);
 		Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
 		mBle.disconnect(DEVICE);
+	}
+	
+	@Subscribe
+	public void onScan(Scan event) {
+		Log.d(TAG, "onScan");
 	}
 }

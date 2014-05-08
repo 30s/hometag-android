@@ -14,6 +14,13 @@
         android:layout_height="wrap_content"
         android:text="Start" />
 
+    <Button
+        android:id="@+id/btn_scan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/btn_control_service"
+        android:text="Scan" />
+
     <ListView
         android:id="@+id/lst_dev"
         android:layout_width="match_parent"
