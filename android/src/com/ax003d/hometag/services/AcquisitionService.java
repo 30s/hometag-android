@@ -21,6 +21,8 @@ import com.ax003d.hometag.events.DataRead;
 import com.ax003d.hometag.events.DeviceFound;
 import com.ax003d.hometag.events.Scan;
 import com.ax003d.hometag.utils.Utils;
+import com.parse.Parse;
+import com.parse.ParseObject;
 import com.squareup.otto.Subscribe;
 import com.xtremeprog.sdk.ble.BleGattCharacteristic;
 import com.xtremeprog.sdk.ble.BleGattService;
@@ -31,6 +33,7 @@ public class AcquisitionService extends Service {
 	private static final String TAG = "AcquisitionService";
 	protected BleService mService;
 	private IBle mBle;
+	private long lastTS = System.currentTimeMillis();
 
 	private Set<String> mDevices = new HashSet<String>();
 
@@ -73,8 +76,16 @@ public class AcquisitionService extends Service {
 				mBle.requestConnect(addr);
 			} else if (BleService.BLE_CHARACTERISTIC_CHANGED.equals(action)) {
 				byte[] val = extras.getByteArray(BleService.EXTRA_VALUE);
-				String data = val[0] + "c " + val[2] + "%"; 
+				String data = val[0] + "c " + val[2] + "%";
 				Log.d(TAG, data);
+				if (System.currentTimeMillis() - lastTS > 10000) {
+					ParseObject th = new ParseObject("bleTH");
+					th.put("mac", addr);
+					th.put("t", val[0]);
+					th.put("h", val[2]);
+					th.saveInBackground();
+					lastTS = System.currentTimeMillis();
+				}
 				Utils.getBus().post(new DataRead(addr, data));
 			}
 		}
@@ -99,6 +110,8 @@ public class AcquisitionService extends Service {
 
 	@Override
 	public void onCreate() {
+		Parse.initialize(this, "pQZLIr5NXvErXQCAvdW30K9WPHZ92afu7FHdDgZM",
+				"cEb0UIuQc421gFYQexijCjU0xsn3VpJAXbywVxv8");
 		Utils.getBus().register(this);
 		Intent bindIntent = new Intent(this, BleService.class);
 		bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
